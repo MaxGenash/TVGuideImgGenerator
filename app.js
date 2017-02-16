@@ -2,6 +2,8 @@
  * Created by MaxGenash on 12.02.2017.
  */
 
+require("babel-polyfill");
+
 const { saveImgOnDics, generateTvGuideImg } = require("./generateTvGuideImg"),
     getTvGuide = require("./getTvGuide"),
     postImgOnVK = require("./postImgOnVK"),
