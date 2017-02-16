@@ -2,61 +2,56 @@
  * Created by MaxGenash on 12.02.2017.
  */
 
-require("babel-polyfill");
-
 const { saveImgOnDics, generateTvGuideImg } = require("./generateTvGuideImg"),
     getTvGuide = require("./getTvGuide"),
-    postImgOnVK = require("./postImgOnVK"),
-    config = require("./config.json");
+    postImgOnVK = require("./postImgOnVK");
 
-(async function({
+async function app({
     vkUsername,
     vkPassword,
     vkGroupId,
-    appId,
-    appSecret
+    vkAppId,
+    vkAppSecret,
+    vkApiVersion
 }) {
     console.log("TV_Gide_Img_Generator started with arguments = ", arguments);
+    let tvGuideResData,
+        imgCanvas,
+        savedImgName,
+        vkSuccessfulPostId;
 
-    //TODO перевіряти щоб було передано усі параметри
+    if(!vkUsername || !vkPassword || !vkGroupId || !vkAppId || !vkAppSecret || !vkApiVersion)
+        console.error("Warning! Some of the TV_Gide_Img_Generator arguments are empty!");
 
-    //Get TV Guide Data
     try {
-        var getTvGuideRes = await getTvGuide();
+        //Get TV Guide Data
+        tvGuideResData = await getTvGuide();
+
+        //Generate image
+        imgCanvas = generateTvGuideImg(tvGuideResData);
+
+        //Save the image on drive before sending(to have a copy on drive)
+        savedImgName = await saveImgOnDics(imgCanvas, "TV_guide_img.png");
+
+        //send request to VK API
+        vkSuccessfulPostId = await postImgOnVK({
+            postedImg: savedImgName,
+            postedGroupId: vkGroupId,
+            vkUsername,
+            vkPassword,
+            vkApiVersion,
+            vkAppId,
+            vkAppSecret
+        });
+        console.log("\npostImgOnVK successfully posted img, postId = ", vkSuccessfulPostId);
     } catch (e) {
-        //TODO
-        console.error("wtf: e =", e);
+        console.error("\nCaught error in TV_Gide_Img_Generator: ", e);
         return -1;
     }
 
-    //generate image
-    var imgCanvas = generateTvGuideImg(getTvGuideRes);
+    console.log("\nTV_Gide_Img_Generator end");
+    return 0;
+}
 
-    //Зберігаємо картинку на диск перед відправкою
-    // краще було б відправляти напряму з оперативної пам'яті,
-    // але я не знайшов як конвертувати тоді картинку у multipart/form-data у відповідності до вимог VK API
-    try {
-        var savedImgName = await saveImgOnDics(imgCanvas, "TV_guide_img.png");
-    } catch (e) {
-        //TODO
-        console.error("wtf: e =", e);
-        return -1;
-    }
 
-    //send request to VK API
-    let vkResponse = await postImgOnVK({
-        postedImg: savedImgName,
-        postedGroupId: vkGroupId,
-        vkUsername,
-        vkPassword,
-        appId,
-        appSecret
-    });
-
-    if(vkResponse.success)
-        console.log("\npostImgOnVK returned success: ", vkResponse.success);
-    else
-        console.error("\npostImgOnVK returned error: ", vkResponse);
-
-    console.log("\nTV_Gide_Img_Generator stop");
-}(config));
+module.exports = app;

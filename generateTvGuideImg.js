@@ -4,10 +4,11 @@
 
 const Canvas = require('canvas'),
     moment = require('moment'),
+    _ = require('lodash'),
     fs = require('fs');
 
 function saveImgOnDics(imgCanvas, imgName) {
-    console.log("Called saveImgOnDics with arguments", arguments);
+    console.log("\nCalled saveImgOnDics with arguments", arguments);
 
     return new Promise((resolve, reject) => {
         let out = fs.createWriteStream(__dirname + "/" + imgName),
@@ -30,7 +31,7 @@ function generateTvGuideImg (tvGuideData) {
     let imgH = 800, //для початку будь-які значення щоб створити канвас для виміру розмірів тексту
         imgW = 600,
         imgHeadline = `Телепрограма каналу «1+1» на ${moment(tvGuideData.date).format('DD.MM.YYYY')}`,
-        //TODO обрізати текст який більше 200 символів
+        maxTitleWidth = 200,    //обмеження у 200 символів на випадок якщо назва буде занадто довга
         programsList = tvGuideData.programs.map((el, i) => {
             if(!moment(el.realtime_begin).isValid())
                 throw new Error(`Invalid date stamp = "${el.realtime_begin}" of tvGuideData.programs[${i}].realtime_begin`);
@@ -39,11 +40,13 @@ function generateTvGuideImg (tvGuideData) {
 
             //el.realtime_begin*1000 - множимо на 1000 бо там переається час в секундах, а не в мілісекундах
             let startTime = moment(el.realtime_begin*1000).format('HH:mm'),
-                subtitle = el.subtitle && `(${el.subtitle})` || "";
+                truncatedSubtitle = _.truncate(el.subtitle, {'length': maxTitleWidth}),
+                truncatedTitle = _.truncate(el.title, {'length': maxTitleWidth}),
+                subtitlePerformed = el.subtitle ? "(" + truncatedSubtitle + ")" : "";
 
             return {
                 timeText: startTime,
-                titleText: " - " + el.title + subtitle
+                titleText: " - " + truncatedTitle + subtitlePerformed
             }
         }),
         canvas = new Canvas(imgH, imgW),
