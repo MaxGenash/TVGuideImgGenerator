@@ -6,12 +6,12 @@ const moment = require('moment'),
     fetch = require('node-fetch');
 
 /**
- * Повертає проміс із результатами запиту на сервер api.ovva.tv
- * @param options
- * @param options.lang - мова = "ru" або "ua", Default value: "ua"
- * @param options.day - День(в форматі yyyy-mm-dd), Default value: поточний день
- * @param options.channel - channel_string_id телеканалу, список доступних телеканалів тут https://api.ovva.tv/#api-TVGUIDE-GetV2LangTvguideDay , Default value: "1plus1"
- * @returns {Object}
+ * Робить запит на сервер api.ovva.tv по інформацію про поточну телерограму
+ * @param {Object} [options]
+ * @param {String} [options.lang="ua"] - мова = "ru" або "ua"
+ * @param {String} [options.day=today] - День(в форматі yyyy-mm-dd)
+ * @param {String} [options.channel="1plus1"] - channel_string_id телеканалу, список доступних телеканалів тут https://api.ovva.tv/#api-TVGUIDE-GetV2LangTvguideDay
+ * @returns {Promise.<Object>} - результати запиту на сервер api.ovva.tv
  */
 async function getTvGuide (options = {}) {
     console.log("\nCalled getTvGuide with arguments = ", arguments);

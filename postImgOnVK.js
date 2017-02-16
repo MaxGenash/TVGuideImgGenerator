@@ -6,10 +6,23 @@ const FormData = require('form-data'),
     fs = require("fs"),
     fetch = require('node-fetch');
 
-async function getVkToken(options) {
+/**
+ * Отримує access_token від vk.com
+ * @param {Object} options
+ * @param {String} options.vkUsername - логін користувача від vk.com
+ * @param {String} options.vkPassword - пароль користувача від vk.com
+ * @param {String} options.vkAppId - id додатку у VK через який відбуватиметься взаємодія з API
+ * @param {String} options.vkAppSecret - код додатку у VK через який відбуватиметься взаємодія з API
+ * @param {String} options.vkApiVersion - версія API VK
+ * @returns {Promise.<String>} - access_token
+ */
+async function getVkToken(options = {}) {
     console.log("\nCalled getVkToken with arguments", arguments);
 
     let {vkUsername, vkPassword, vkAppId, vkAppSecret, vkApiVersion} = options;
+    if(!vkUsername || !vkPassword || !vkAppId || !vkAppSecret || !vkApiVersion) {
+        throw new Error("Some of the getVkToken arguments are empty!");
+    }
 
     //тип авторизації описано тут: https://vk.com/dev/auth_direct
     //client_id і client_secret можна взяти із додатку "ВКонтакте для Windows",
@@ -30,6 +43,19 @@ async function getVkToken(options) {
         throw new Error("VK getVkToken response doesn't contain access_token");
 }
 
+
+/**
+ * Публікує картинку на стіні групи у vk.com
+ * @param {Object} options
+ * @param {String} options.postedImg - назва картинки(у поточній директорії) яка буде публікуватись
+ * @param {String} options.postedGroupId - id групи vk.com на стіну якої буде публікуватись картинка
+ * @param {String} options.vkUsername - логін користувача від vk.com
+ * @param {String} options.vkPassword - пароль користувача від vk.com
+ * @param {String} options.vkAppId - id додатку у VK через який відбуватиметься взаємодія з API
+ * @param {String} options.vkAppSecret - код додатку у VK через який відбуватиметься взаємодія з API
+ * @param {String} options.vkApiVersion - версія API VK
+ * @returns {Promise.<String>} - id опублікованого посту на стіні групи VK
+ */
 async function postImgOnVk (options = {}) {
     console.log("\nCalled postImgOnVk with arguments", arguments);
 

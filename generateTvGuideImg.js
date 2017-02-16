@@ -7,6 +7,13 @@ const Canvas = require('canvas'),
     _ = require('lodash'),
     fs = require('fs');
 
+/**
+ * Зберігає пеердане Canvas зображення у файл
+ * @param {Canvas} imgCanvas - Canvas із зображенням яке треба зберегти
+ * @param {String} imgName - назва картинки із якою треба зберегти зображення
+ * @returns {String} - назва картинки яку зберегли
+ * @returns {Promise.<String>} - назва збереженої картинки
+ */
 function saveImgOnDics(imgCanvas, imgName) {
     console.log("\nCalled saveImgOnDics with arguments", arguments);
 
@@ -25,6 +32,11 @@ function saveImgOnDics(imgCanvas, imgName) {
     });
 }
 
+/**
+ * Генерує картинку із телепрограмою що відповідає переданому tvGuideData
+ * @param {Object} tvGuideData - дані про телепрограму
+ * @returns {Canvas} - Canvas із згенерованою картинкою
+ */
 function generateTvGuideImg (tvGuideData) {
     console.log("\nCalled generateTvGuideImg with arguments", arguments);
 
