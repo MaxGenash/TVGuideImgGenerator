@@ -3,11 +3,14 @@
  */
 
 const Canvas = require('canvas'),
+    moment = require('moment'),
     fs = require('fs');
 
 function saveImgOnDics(imgCanvas, imgName) {
+    console.log("Called saveImgOnDics with arguments", arguments);
+
     return new Promise((resolve, reject) => {
-        var out = fs.createWriteStream(__dirname + "/" + imgName),
+        let out = fs.createWriteStream(__dirname + "/" + imgName),
             stream = imgCanvas.pngStream();
 
         stream.on('data', function(chunk){
@@ -21,21 +24,68 @@ function saveImgOnDics(imgCanvas, imgName) {
     });
 }
 
-function generateTvGuideImg (options) {
-    var canvas = new Canvas(200, 200);
-    var ctx = canvas.getContext("2d");
+function generateTvGuideImg (tvGuideData) {
+    console.log("\nCalled generateTvGuideImg with arguments", arguments);
 
-    ctx.font = '30px Impact';
-    ctx.rotate(.1);
-    ctx.fillText("Awesome!", 50, 100);
+    let imgH = 800, //для початку будь-які значення щоб створити канвас для виміру розмірів тексту
+        imgW = 600,
+        imgHeadline = `Телепрограма каналу «1+1» на ${moment(tvGuideData.date).format('DD.MM.YYYY')}`,
+        //TODO обрізати текст який більше 200 символів
+        programsList = tvGuideData.programs.map((el, i) => {
+            if(!moment(el.realtime_begin).isValid())
+                throw new Error(`Invalid date stamp = "${el.realtime_begin}" of tvGuideData.programs[${i}].realtime_begin`);
+            if(!el.title)
+                throw new Error(`Invalid value = "${el.title}" of tvGuideData.programs[${i}].title`);
 
-    var te = ctx.measureText('Awesome!');
-    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-    ctx.beginPath();
-    ctx.lineTo(50, 102);
-    ctx.lineTo(50 + te.width, 102);
-    ctx.stroke();
+            //el.realtime_begin*1000 - множимо на 1000 бо там переається час в секундах, а не в мілісекундах
+            let startTime = moment(el.realtime_begin*1000).format('HH:mm'),
+                subtitle = el.subtitle && `(${el.subtitle})` || "";
 
+            return {
+                timeText: startTime,
+                titleText: " - " + el.title + subtitle
+            }
+        }),
+        canvas = new Canvas(imgH, imgW),
+        ctx = canvas.getContext("2d");
+
+    //Міряємо розміри картинки
+    ctx.font = '30px Comic Sans';
+    let headlineW = ctx.measureText(imgHeadline).width;
+    ctx.font = '18px Latto';
+    let programsListW = Math.max(...programsList.map(el => ctx.measureText(el.timeText + el.titleText).width) );
+
+    let imgPadding = 20,
+        prListTextLineH = 30,
+        headlineH = 30,
+        headlineMarginBottom = 15;
+    imgW = imgPadding*2 + Math.max(programsListW, headlineW);
+    imgH = imgPadding*2 + headlineH + headlineMarginBottom + prListTextLineH*programsList.length;
+
+    //Створюємо Canvas необхідних розмірів
+    canvas = new Canvas(imgW, imgH);
+    ctx = canvas.getContext("2d");
+
+    //Заповнюємо картинку текстом
+    ctx.textBaseline="top";
+    ctx.font = '30px Comic Sans';
+    ctx.fillText(imgHeadline, imgPadding, imgPadding);
+    programsList.forEach((el, i) => {
+        ctx.font = 'bold 18px Roboto';
+        ctx.fillText(
+            el.timeText,
+            imgPadding+10,
+            headlineH + headlineMarginBottom + imgPadding + i*prListTextLineH
+        );
+        ctx.font = 'italic 18px Roboto';
+        ctx.fillText(
+            el.titleText,
+            imgPadding+10 + ctx.measureText(el.timeText).width,
+            headlineH + headlineMarginBottom + imgPadding + i*prListTextLineH
+        );
+    });
+
+    console.log("\nImg is generated.");
     return canvas;
 }
 

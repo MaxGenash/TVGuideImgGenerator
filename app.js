@@ -28,7 +28,7 @@ const { saveImgOnDics, generateTvGuideImg } = require("./generateTvGuideImg"),
     }
 
     //generate image
-    var imgCanvas = generateTvGuideImg();
+    var imgCanvas = generateTvGuideImg(getTvGuideRes);
 
     //Зберігаємо картинку на диск перед відправкою
     // краще було б відправляти напряму з оперативної пам'яті,
